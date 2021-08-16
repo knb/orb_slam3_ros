@@ -1,3 +1,14 @@
+**ORB-SLAM3 Authors:** Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, [José M. M. Montiel](http://webdiis.unizar.es/~josemari/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/).
+
+# ORB-SLAM3 ROS node
+
+This is the limited ROS2(foxy) implementation of the ORB-SLAM3 real-time SLAM library for **RGB-D** cameras.
+
+## TODO
+
+- map save and load features.
+- inertial for RGB-D
+
 # ORB-SLAM2
 **ORB-SLAM2 Authors:** [Raul Mur-Artal](http://webdiis.unizar.es/~raulmur/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/), [J. M. M. Montiel](http://webdiis.unizar.es/~josemari/) and [Dorian Galvez-Lopez](http://doriangalvez.com/) ([DBoW2](https://github.com/dorian3d/DBoW2)).
 The original implementation can be found [here](https://github.com/raulmur/ORB_SLAM2.git).

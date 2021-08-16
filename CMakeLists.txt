@@ -16,7 +16,8 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+  # add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(-w)
 endif()
 
 find_package(ament_cmake REQUIRED)
@@ -55,6 +56,7 @@ if(NOT OpenCV_FOUND)
 endif()
 
 find_package(Eigen3 REQUIRED)
+find_package(Pangolin REQUIRED)
 
 # rosidl_generate_interfaces(${PROJECT_NAME}
 #   "srv/SaveMap.srv"
@@ -67,6 +69,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/orb_slam3/include/CameraModels
   ${PROJECT_SOURCE_DIR}/ros/include
   ${EIGEN3_INCLUDE_DIR}
+  ${Pangolin_INCLUDE_DIRS}
   include
 )
 
@@ -102,6 +105,8 @@ orb_slam3/src/System.cc
 orb_slam3/src/Tracking.cc
 orb_slam3/src/TwoViewReconstruction.cc
 orb_slam3/src/Viewer.cc
+orb_slam3/src/CameraModels/KannalaBrandt8.cpp
+orb_slam3/src/CameraModels/Pinhole.cpp
 )
 
 ament_target_dependencies(orb_slam3_ros_core
@@ -112,6 +117,7 @@ ament_target_dependencies(orb_slam3_ros_core
 target_link_libraries(orb_slam3_ros_core
   ${OpenCV_LIBS}
   ${EIGEN3_LIBS}
+  ${Pangolin_LIBRARIES}
   DBoW2
   g2o
 )
@@ -137,7 +143,7 @@ target_link_libraries(${PROJECT_NAME}_mono
   ${OpenCV_LIBS}
 )
 
-rosidl_target_interfaces(${PROJECT_NAME}_mono ${PROJECT_NAME} "rosidl_typesupport_cpp")
+# rosidl_target_interfaces(${PROJECT_NAME}_mono ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 #Stereo
 add_executable (${PROJECT_NAME}_stereo
@@ -152,7 +158,7 @@ target_link_libraries(${PROJECT_NAME}_stereo
   ${OpenCV_LIBS}
 )
 
-rosidl_target_interfaces(${PROJECT_NAME}_stereo ${PROJECT_NAME} "rosidl_typesupport_cpp")
+# rosidl_target_interfaces(${PROJECT_NAME}_stereo ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 #RGBD
 add_executable(${PROJECT_NAME}_rgbd
@@ -167,7 +173,7 @@ target_link_libraries(${PROJECT_NAME}_rgbd
   ${OpenCV_LIBS}
 )
 
-rosidl_target_interfaces(${PROJECT_NAME}_rgbd ${PROJECT_NAME} "rosidl_typesupport_cpp")
+# rosidl_target_interfaces(${PROJECT_NAME}_rgbd ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 install(TARGETS ${PROJECT_NAME}_mono ${PROJECT_NAME}_stereo ${PROJECT_NAME}_rgbd
   RUNTIME DESTINATION lib/${PROJECT_NAME}
@@ -187,8 +193,8 @@ install(DIRECTORY ros/config/
   DESTINATION share/${PROJECT_NAME}/ros/config
 )
 
-install(DIRECTORY orb_slam2/Vocabulary/
-  DESTINATION share/${PROJECT_NAME}/orb_slam2/Vocabulary
+install(DIRECTORY orb_slam3/Vocabulary/
+  DESTINATION share/${PROJECT_NAME}/orb_slam3/Vocabulary
 )
 
 if(BUILD_TESTING)
@@ -199,7 +205,7 @@ endif()
 ament_export_include_directories(include)
 ament_export_dependencies(
   ${dependencies}
-  rosidl_default_runtime
+  # rosidl_default_runtime
   DBoW2
   g2o
 )
