@@ -9,7 +9,7 @@ from ament_index_python.packages import get_package_share_directory
 def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time')
-    params_file = LaunchConfiguration('params_file')
+    setting_file = LaunchConfiguration('setting_file')
     voc_file = LaunchConfiguration('voc_file')
 
     remappings = [
@@ -25,28 +25,30 @@ def generate_launch_description():
             description='Use simulation (Gazebo) clock if true'),
 
         DeclareLaunchArgument(
-            'params_file',
+            'setting_file',
             default_value=os.path.join(
-                get_package_share_directory("orb_slam2_ros"),
-                'ros', 'config', 'params_d435_rgbd.yaml'),
+                get_package_share_directory("orb_slam3_ros"),
+                'ros', 'config', 'D435i.yaml'),
             description='Full path to the ROS2 parameters file to use for all launched nodes'),
 
         DeclareLaunchArgument(
             'voc_file',
             default_value=os.path.join(
-                get_package_share_directory("orb_slam2_ros"),
-                'orb_slam2', 'Vocabulary', 'ORBvoc.txt'),
+                get_package_share_directory("orb_slam3_ros"),
+                'orb_slam3', 'Vocabulary', 'ORBvoc.txt'),
             description='Full path to vocabulary file to use'),
 
         Node(
             parameters=[
-                params_file,
                 {"voc_file": voc_file,
-                 "use_sim_time": use_sim_time},
+                 "use_sim_time": use_sim_time,
+                 "setting_file": setting_file,
+                 "use_viewer": False,
+                 "publish_pointcloud": True,},
             ],
-            package='orb_slam2_ros',
-            node_executable='orb_slam2_ros_rgbd',
-            node_name='orb_slam2_rgbd',
+            package='orb_slam3_ros',
+            node_executable='orb_slam3_ros_rgbd',
+            node_name='orb_slam3_rgbd',
             output='screen',
             remappings=remappings
         )

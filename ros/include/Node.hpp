@@ -21,7 +21,7 @@
 #ifndef NODE_HPP_
 #define NODE_HPP_
 
-#include <image_transport/image_transport.h>
+#include <image_transport/image_transport.hpp>
 #include <cv_bridge/cv_bridge.h>
 
 #include <message_filters/subscriber.h>
@@ -55,7 +55,7 @@
 #include "tf2_ros/create_timer_ros.h"
 #include "tf2/utils.h"
 
-#include "orb_slam2_ros/srv/save_map.hpp"
+// #include "orb_slam3_ros/srv/save_map.hpp"
 
 class Node : public rclcpp::Node
 {
@@ -64,7 +64,7 @@ public:
     const std::string & node_name,
     const rclcpp::NodeOptions & node_options);
 
-  void init(const ORB_SLAM2::System::eSensor & sensor);
+  void init(const ORB_SLAM3::System::eSensor & sensor);
 
   ~Node();
 
@@ -75,33 +75,35 @@ protected:
     return initialized_;
   }
 
-  ORB_SLAM2::System * orb_slam_;
+  ORB_SLAM3::System::eSensor sensor_;
+
+  cv::Mat current_pose_;
+
+  ORB_SLAM3::System * orb_slam_;
   rclcpp::Time current_frame_time_;
   std::shared_ptr<image_transport::ImageTransport> image_transport_;
 
 private:
-  void PublishMapPoints(std::vector<ORB_SLAM2::MapPoint *> map_points);
+  void PublishMapPoints(std::vector<ORB_SLAM3::MapPoint *> map_points);
   void PublishPositionAsTransform(cv::Mat position);
   void PublishPositionAsPoseStamped(cv::Mat position);
   void PublishRenderedImage(cv::Mat image);
-  void SaveMapSrv(
-    const shared_ptr<rmw_request_id_t>/*request_header*/,
-    const shared_ptr<orb_slam2_ros::srv::SaveMap::Request> request,
-    const shared_ptr<orb_slam2_ros::srv::SaveMap::Response> response);
+  // void SaveMapSrv(
+  //   const shared_ptr<rmw_request_id_t>/*request_header*/,
+  //   const shared_ptr<orb_slam3_ros::srv::SaveMap::Request> request,
+  //   const shared_ptr<orb_slam3_ros::srv::SaveMap::Response> response);
   void LoadOrbParameters(sensor_msgs::msg::CameraInfo::SharedPtr camera_info);
   void cameraInfoCallback(sensor_msgs::msg::CameraInfo::SharedPtr msg);
 
   tf2::Transform TransformFromMat(cv::Mat position_mat);
   sensor_msgs::msg::PointCloud2 MapPointsToPointCloud(
-    std::vector<ORB_SLAM2::MapPoint *> map_points);
-
-  ORB_SLAM2::System::eSensor sensor_;
+    std::vector<ORB_SLAM3::MapPoint *> map_points);
 
   image_transport::Publisher rendered_image_publisher_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr map_points_publisher_;
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher_;
   rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_sub_;
-  rclcpp::Service<orb_slam2_ros::srv::SaveMap>::SharedPtr service_server_;
+  // rclcpp::Service<orb_slam3_ros::srv::SaveMap>::SharedPtr service_server_;
 
   std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
@@ -115,6 +117,9 @@ private:
   std::string camera_frame_id_param_;
   std::string map_file_name_param_;
   std::string voc_file_name_param_;
+  std::string setting_file_name_param_;
+  bool use_viewer_param_;
+
   bool load_map_param_;
   bool publish_pointcloud_param_;
   bool publish_tf_param_;

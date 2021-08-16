@@ -1,10 +1,9 @@
-orb_slam2_rgbd:
+orb_slam3_rgbd:
   ros__parameters:
-
     publish_pointcloud: true
     publish_pose: true
     localize_only: false
-    reset_map: false
+    reset_map: true
 
     # static parameters
     load_map: false
@@ -23,10 +22,10 @@ orb_slam2_rgbd:
 
     #Camera Parameters
     #Camera frames per second
-    camera_fps: 30
+    camera_fps: 15
     #Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale) 
     camera_rgb_encoding: true
     #Close/Far threshold. Baseline times.
     ThDepth: 40.0
     depth_map_factor: 1.0
-    camera_baseline: 9.052
+    camera_baseline: 5.0

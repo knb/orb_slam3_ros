@@ -2,7 +2,7 @@
 * This file is part of ORB-SLAM2.
 *
 * Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
-* For more information see <https://github.com/raulmur/ORB_SLAM2>
+* For more information see <https://github.com/raulmur/ORB_SLAM3>
 *
 * ORB-SLAM2 is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ StereoNode::StereoNode(
 
 void StereoNode::init()
 {
-  Node::init(ORB_SLAM2::System::STEREO);
+  Node::init(ORB_SLAM3::System::STEREO);
 
   left_sub_ = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::Image>>(
     shared_from_this(), "/image_left/image_color_rect");

@@ -2,7 +2,7 @@
 * This file is part of ORB-SLAM2.
 *
 * Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
-* For more information see <https://github.com/raulmur/ORB_SLAM2>
+* For more information see <https://github.com/raulmur/ORB_SLAM3>
 *
 * ORB-SLAM2 is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ RGBDNode::RGBDNode(
 
 void RGBDNode::init()
 {
-  Node::init(ORB_SLAM2::System::RGBD);
+  Node::init(ORB_SLAM3::System::RGBD);
 
   rgb_subscriber_ = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::Image>>(
     shared_from_this(), "/camera/rgb/image_raw");
@@ -56,6 +56,7 @@ void RGBDNode::init()
     sync_pol(10), *rgb_subscriber_, *depth_subscriber_);
   sync_->registerCallback(
     std::bind(&RGBDNode::ImageCallback, this, std::placeholders::_1, std::placeholders::_2));
+  RCLCPP_WARN(get_logger(), "RGBD node initialized.");
 }
 
 RGBDNode::~RGBDNode()
@@ -92,7 +93,7 @@ void RGBDNode::ImageCallback(
   current_frame_time_ = msgRGB->header.stamp;
 
   rclcpp::Time msg_time = cv_ptrRGB->header.stamp;
-  orb_slam_->TrackRGBD(cv_ptrRGB->image, cv_ptrD->image, msg_time.seconds());
+  current_pose_ = orb_slam_->TrackRGBD(cv_ptrRGB->image, cv_ptrD->image, msg_time.seconds());
 
   Update();
 }

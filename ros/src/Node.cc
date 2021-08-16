@@ -2,7 +2,7 @@
 * This file is part of ORB-SLAM2.
 *
 * Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
-* For more information see <https://github.com/raulmur/ORB_SLAM2>
+* For more information see <https://github.com/raulmur/ORB_SLAM3>
 *
 * ORB-SLAM2 is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ Node::Node(
   map_points_publisher_(nullptr),
   pose_publisher_(nullptr),
   camera_info_sub_(nullptr),
-  service_server_(nullptr),
+  // service_server_(nullptr),
   node_name_(node_name),
   initialized_(false),
   min_observations_per_point_(2)
@@ -43,9 +43,11 @@ Node::Node(
   declare_parameter("map_file", rclcpp::ParameterValue(std::string("map.bin")));
   declare_parameter("voc_file", rclcpp::ParameterValue(std::string("file_not_set")));
   declare_parameter("load_map", rclcpp::ParameterValue(false));
+  declare_parameter("setting_file", rclcpp::ParameterValue(std::string("file_not_set")));
+  declare_parameter("use_viewer", rclcpp::ParameterValue(false));
 
   // ORB SLAM configuration parameters
-  declare_parameter("camera_fps", rclcpp::ParameterValue(30));
+  declare_parameter("camera_fps", rclcpp::ParameterValue(15));
   declare_parameter("camera_rgb_encoding", rclcpp::ParameterValue(true));
   declare_parameter("ORBextractor/nFeatures", rclcpp::ParameterValue(1200));
   declare_parameter("ORBextractor/scaleFactor", rclcpp::ParameterValue(1.2f));
@@ -57,7 +59,7 @@ Node::Node(
   declare_parameter("camera_baseline", rclcpp::ParameterValue(0.0f));
 }
 
-void Node::init(const ORB_SLAM2::System::eSensor & sensor)
+void Node::init(const ORB_SLAM3::System::eSensor & sensor)
 {
   get_parameter("publish_pointcloud", publish_pointcloud_param_);
   get_parameter("publish_pose", publish_pose_param_);
@@ -70,7 +72,7 @@ void Node::init(const ORB_SLAM2::System::eSensor & sensor)
 
   sensor_ = sensor;
 
-  image_transport_ = std::make_shared<image_transport::ImageTransport>(shared_from_this());
+  // image_transport_ = std::make_shared<image_transport::ImageTransport>(shared_from_this());
 
   tf_buffer_ = std::make_shared<tf2_ros::Buffer>(get_clock());
   auto timer_interface = std::make_shared<tf2_ros::CreateTimerROS>(
@@ -80,7 +82,7 @@ void Node::init(const ORB_SLAM2::System::eSensor & sensor)
   tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
   tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(shared_from_this());
 
-  rendered_image_publisher_ = image_transport_->advertise(node_name_ + "/debug_image", 1);
+  // rendered_image_publisher_ = image_transport_->advertise(node_name_ + "/debug_image", 1);
   if (publish_pointcloud_param_) {
     map_points_publisher_ = create_publisher<sensor_msgs::msg::PointCloud2>(
         node_name_ + "/map_points", 1);
@@ -94,11 +96,11 @@ void Node::init(const ORB_SLAM2::System::eSensor & sensor)
   camera_info_sub_ = create_subscription<sensor_msgs::msg::CameraInfo>(
       "/camera/camera_info", 1, std::bind(&Node::cameraInfoCallback, this, std::placeholders::_1));
 
-  service_server_ = create_service<orb_slam2_ros::srv::SaveMap>(
-      node_name_ + "/save_map",
-      std::bind(
-          &Node::SaveMapSrv, this,
-          std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+  // service_server_ = create_service<orb_slam3_ros::srv::SaveMap>(
+  //     node_name_ + "/save_map",
+  //     std::bind(
+  //         &Node::SaveMapSrv, this,
+  //         std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 }
 
 Node::~Node()
@@ -119,7 +121,7 @@ void Node::Update()
     return;
   }
 
-  cv::Mat position = orb_slam_->GetCurrentPosition();
+  cv::Mat position = current_pose_; // orb_slam_->GetCurrentPosition();
 
   if (!position.empty()) {
     PublishPositionAsTransform(position);
@@ -128,13 +130,14 @@ void Node::Update()
     }
   }
 
-  PublishRenderedImage(orb_slam_->DrawCurrentFrame());
+  // PublishRenderedImage(orb_slam_->DrawCurrentFrame());
+  // PublishRenderedImage(orb_slam_->mpFrameDrawer->DrawFrame())
   if (publish_pointcloud_param_) {
     PublishMapPoints(orb_slam_->GetAllMapPoints());
   }
 }
 
-void Node::PublishMapPoints(std::vector<ORB_SLAM2::MapPoint *> map_points)
+void Node::PublishMapPoints(std::vector<ORB_SLAM3::MapPoint *> map_points)
 {
   sensor_msgs::msg::PointCloud2 cloud = MapPointsToPointCloud(map_points);
   map_points_publisher_->publish(cloud);
@@ -163,11 +166,6 @@ void Node::PublishPositionAsPoseStamped(cv::Mat position)
   pose_publisher_->publish(pose_msg);
 }
 
-void Node::PublishGBAStatus (bool gba_status) {
-  std_msgs::Bool gba_status_msg;
-  gba_status_msg.data = gba_status;
-  status_gba_publisher_.publish(gba_status_msg);
-}
 
 void Node::PublishRenderedImage(cv::Mat image)
 {
@@ -220,7 +218,7 @@ tf2::Transform Node::TransformFromMat(cv::Mat position_mat)
 
 
 sensor_msgs::msg::PointCloud2 Node::MapPointsToPointCloud(
-  std::vector<ORB_SLAM2::MapPoint *> map_points)
+  std::vector<ORB_SLAM3::MapPoint *> map_points)
 {
   if (map_points.empty()) {
     RCLCPP_WARN(get_logger(), "Map point vector is empty!");
@@ -272,19 +270,19 @@ sensor_msgs::msg::PointCloud2 Node::MapPointsToPointCloud(
   return cloud;
 }
 
-void Node::SaveMapSrv(
-  const shared_ptr<rmw_request_id_t>,
-  const shared_ptr<orb_slam2_ros::srv::SaveMap::Request> request,
-  const shared_ptr<orb_slam2_ros::srv::SaveMap::Response> response)
-{
-  response->success = orb_slam_->SaveMap(request->name);
+// void Node::SaveMapSrv(
+//   const shared_ptr<rmw_request_id_t>,
+//   const shared_ptr<orb_slam3_ros::srv::SaveMap::Request> request,
+//   const shared_ptr<orb_slam3_ros::srv::SaveMap::Response> response)
+// {
+//   response->success = orb_slam_->SaveMap(request->name);
 
-  if (response->success) {
-    RCLCPP_INFO(get_logger(), "Map was saved as %s", request->name.c_str());
-  } else {
-    RCLCPP_ERROR(get_logger(), "Map could not be saved.");
-  }
-}
+//   if (response->success) {
+//     RCLCPP_INFO(get_logger(), "Map was saved as %s", request->name.c_str());
+//   } else {
+//     RCLCPP_ERROR(get_logger(), "Map could not be saved.");
+//   }
+// }
 
 void Node::cameraInfoCallback(sensor_msgs::msg::CameraInfo::SharedPtr msg)
 {
@@ -297,43 +295,54 @@ void Node::cameraInfoCallback(sensor_msgs::msg::CameraInfo::SharedPtr msg)
 void Node::LoadOrbParameters(sensor_msgs::msg::CameraInfo::SharedPtr camera_info)
 {
   // Create a parameters object to pass to the Tracking system
-  ORB_SLAM2::ORBParameters parameters{};
+  // ORB_SLAM3::ORBParameters parameters{};
+  get_parameter("setting_file", setting_file_name_param_);
+  get_parameter("use_viewer", use_viewer_param_);
 
-  get_parameter("camera_fps", parameters.maxFrames);
-  get_parameter("camera_rgb_encoding", parameters.RGB);
-  get_parameter("ORBextractor/nFeatures", parameters.nFeatures);
-  get_parameter("ORBextractor/scaleFactor", parameters.scaleFactor);
-  get_parameter("ORBextractor/nLevels", parameters.nLevels);
-  get_parameter("ORBextractor/iniThFAST", parameters.iniThFAST);
-  get_parameter("ORBextractor/minThFAST", parameters.minThFAST);
+  // get_parameter("camera_fps", parameters.maxFrames);
+  // get_parameter("camera_rgb_encoding", parameters.RGB);
+  // get_parameter("ORBextractor/nFeatures", parameters.nFeatures);
+  // get_parameter("ORBextractor/scaleFactor", parameters.scaleFactor);
+  // get_parameter("ORBextractor/nLevels", parameters.nLevels);
+  // get_parameter("ORBextractor/iniThFAST", parameters.iniThFAST);
+  // get_parameter("ORBextractor/minThFAST", parameters.minThFAST);
 
-  if (sensor_ == ORB_SLAM2::System::STEREO || sensor_ == ORB_SLAM2::System::RGBD) {
-    get_parameter("ThDepth", parameters.thDepth);
-    get_parameter("depth_map_factor", parameters.depthMapFactor);
-  }
+  // if (sensor_ == ORB_SLAM3::System::STEREO || sensor_ == ORB_SLAM3::System::RGBD) {
+  //   get_parameter("ThDepth", parameters.thDepth);
+  //   get_parameter("depth_map_factor", parameters.depthMapFactor);
+  // }
 
-  parameters.fx = camera_info->k[0];
-  parameters.fy = camera_info->k[4];
-  parameters.cx = camera_info->k[2];
-  parameters.cy = camera_info->k[5];
-  parameters.k1 = camera_info->d[0];
-  parameters.k2 = camera_info->d[1];
-  parameters.p1 = camera_info->d[2];
-  parameters.p2 = camera_info->d[3];
-  parameters.k3 = camera_info->d[4];
+  // parameters.fx = camera_info->k[0];
+  // parameters.fy = camera_info->k[4];
+  // parameters.cx = camera_info->k[2];
+  // parameters.cy = camera_info->k[5];
+  // parameters.k1 = camera_info->d[0];
+  // parameters.k2 = camera_info->d[1];
+  // parameters.p1 = camera_info->d[2];
+  // parameters.p2 = camera_info->d[3];
+  // parameters.k3 = camera_info->d[4];
 
-  if (sensor_ == ORB_SLAM2::System::STEREO || sensor_ == ORB_SLAM2::System::RGBD) {
-    if (!get_parameter("camera_baseline", parameters.baseline)) {
-      parameters.baseline = camera_info->p[3];
-    }
-  }
+  // if (sensor_ == ORB_SLAM3::System::STEREO || sensor_ == ORB_SLAM3::System::RGBD) {
+  //   if (!get_parameter("camera_baseline", parameters.baseline)) {
+  //     parameters.baseline = camera_info->p[3];
+  //   }
+  // }
 
-  orb_slam_ = new ORB_SLAM2::System(
+  // System(const string &strVocFile, const string &strSettingsFile,
+  //    const eSensor sensor, const bool bUseViewer = true,
+  //    const int initFr = 0, const string &strSequence = std::string(),
+  //    const string &strLoadingFile = std::string());
+
+  RCLCPP_INFO(get_logger(), "start ORB SLAM3 ...");
+  orb_slam_ = new ORB_SLAM3::System(
       voc_file_name_param_,
+      setting_file_name_param_,
       sensor_,
-      parameters,
-      map_file_name_param_,
-      load_map_param_);
+      use_viewer_param_);
+      // parameters,
+      // map_file_name_param_,
+      // load_map_param_);
+  RCLCPP_INFO(get_logger(), "... ORB SLAM3 loaded!");
 
   initialized_ = true;
 }
