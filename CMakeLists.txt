@@ -79,41 +79,47 @@ include(${PROJECT_SOURCE_DIR}/orb_slam3/Thirdparty/g2o/CMakeLists.txt)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/orb_slam3/lib)
 
 add_library(orb_slam3_ros_core SHARED
-orb_slam3/src/Atlas.cc
-orb_slam3/src/Converter.cc
-orb_slam3/src/Frame.cc
-orb_slam3/src/FrameDrawer.cc
-orb_slam3/src/G2oTypes.cc
-orb_slam3/src/ImuTypes.cc
-orb_slam3/src/Initializer.cc
-orb_slam3/src/KeyFrame.cc
-orb_slam3/src/KeyFrameDatabase.cc
-orb_slam3/src/LocalMapping.cc
-orb_slam3/src/LoopClosing.cc
-orb_slam3/src/Converter.cc
-orb_slam3/src/Map.cc
-orb_slam3/src/MapDrawer.cc
-orb_slam3/src/MapPoint.cc
-orb_slam3/src/MLPnPsolver.cpp
-orb_slam3/src/OptimizableTypes.cpp
-orb_slam3/src/Optimizer.cc
-orb_slam3/src/ORBextractor.cc
-orb_slam3/src/ORBmatcher.cc
-orb_slam3/src/PnPsolver.cc
-orb_slam3/src/Sim3Solver.cc
-orb_slam3/src/System.cc
-orb_slam3/src/Tracking.cc
-orb_slam3/src/TwoViewReconstruction.cc
-orb_slam3/src/Viewer.cc
-orb_slam3/src/CameraModels/KannalaBrandt8.cpp
-orb_slam3/src/CameraModels/Pinhole.cpp
+  orb_slam3/src/Atlas.cc
+  orb_slam3/src/Converter.cc
+  orb_slam3/src/Frame.cc
+  orb_slam3/src/FrameDrawer.cc
+  orb_slam3/src/G2oTypes.cc
+  orb_slam3/src/ImuTypes.cc
+  orb_slam3/src/Initializer.cc
+  orb_slam3/src/KeyFrame.cc
+  orb_slam3/src/KeyFrameDatabase.cc
+  orb_slam3/src/LocalMapping.cc
+  orb_slam3/src/LoopClosing.cc
+  orb_slam3/src/Converter.cc
+  orb_slam3/src/Map.cc
+  orb_slam3/src/MapDrawer.cc
+  orb_slam3/src/MapPoint.cc
+  orb_slam3/src/MLPnPsolver.cpp
+  orb_slam3/src/OptimizableTypes.cpp
+  orb_slam3/src/Optimizer.cc
+  orb_slam3/src/ORBextractor.cc
+  orb_slam3/src/ORBmatcher.cc
+  orb_slam3/src/PnPsolver.cc
+  orb_slam3/src/Sim3Solver.cc
+  orb_slam3/src/System.cc
+  orb_slam3/src/Tracking.cc
+  orb_slam3/src/TwoViewReconstruction.cc
+  orb_slam3/src/Viewer.cc
+  orb_slam3/src/CameraModels/KannalaBrandt8.cpp
+  orb_slam3/src/CameraModels/Pinhole.cpp
 )
+
+# -Dxxxx ?
+# target_compile_definitions(orb_slam3_ros_core
+#   PRIVATE "ORB_SLAM3_ROS_CORE_BUILDING_LIBRARY"
+# )
 
 ament_target_dependencies(orb_slam3_ros_core
   rclcpp
-  std_msgs
-  sensor_msgs
+  # std_msgs
+  # sensor_msgs
 )
+
 target_link_libraries(orb_slam3_ros_core
   ${OpenCV_LIBS}
   ${EIGEN3_LIBS}
@@ -175,14 +181,18 @@ target_link_libraries(${PROJECT_NAME}_rgbd
 
 # rosidl_target_interfaces(${PROJECT_NAME}_rgbd ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
-install(TARGETS ${PROJECT_NAME}_mono ${PROJECT_NAME}_stereo ${PROJECT_NAME}_rgbd
+install(TARGETS
+  ${PROJECT_NAME}_core
+  ${PROJECT_NAME}_mono
+  ${PROJECT_NAME}_stereo
+  ${PROJECT_NAME}_rgbd
+  DBoW2
+  g2o
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib/${PROJECT_NAME}
+  LIBRARY DESTINATION lib/${PROJECT_NAME}
   RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
-
-install(TARGETS orb_slam3_ros_core DBoW2 g2o
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
 )
 
 install(DIRECTORY ros/launch/
