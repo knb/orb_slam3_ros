@@ -11,6 +11,7 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
     setting_file = LaunchConfiguration('setting_file')
     voc_file = LaunchConfiguration('voc_file')
+    use_viewer = LaunchConfiguration('use_viewer')
 
     remappings = [
         ('/camera/rgb/image_raw', '/camera/color/image_raw'),
@@ -43,7 +44,7 @@ def generate_launch_description():
                 {"voc_file": voc_file,
                  "use_sim_time": use_sim_time,
                  "setting_file": setting_file,
-                 "use_viewer": True,
+                 "use_viewer": use_viewer,
                  "publish_pointcloud": True,},
             ],
             package='orb_slam3_ros',

@@ -116,8 +116,8 @@ add_library(orb_slam3_ros_core SHARED
 
 ament_target_dependencies(orb_slam3_ros_core
   rclcpp
-  # std_msgs
-  # sensor_msgs
+  std_msgs
+  sensor_msgs
 )
 
 target_link_libraries(orb_slam3_ros_core
@@ -186,6 +186,7 @@ install(TARGETS
   ${PROJECT_NAME}_mono
   ${PROJECT_NAME}_stereo
   ${PROJECT_NAME}_rgbd
+  orb_slam3_ros_core
   DBoW2
   g2o
   EXPORT export_${PROJECT_NAME}
